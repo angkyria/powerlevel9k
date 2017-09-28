@@ -186,7 +186,7 @@ case $POWERLEVEL9K_MODE in
       ANDROID_ICON                   $'\uF17B'              # 
       LINUX_ICON                     $'\uF17C'              # 
       SUNOS_ICON                     $'\uF185 '             # 
-      HOME_ICON                      $'\uF015'              # 
+      HOME_ICON                      $'\uF46D'              # 
       HOME_SUB_ICON                  $'\uF07C'              # 
       FOLDER_ICON                    $'\uF115'              # 
       NETWORK_ICON                   $'\uF1EB'              # 
