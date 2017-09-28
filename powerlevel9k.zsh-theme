@@ -565,7 +565,7 @@ prompt_context() {
   typeset -AH context_states
   context_states=(
     "ROOT"      "yellow"
-    "DEFAULT"   "011"
+    "DEFAULT"   "046"
   )
 
   local content=""
@@ -831,10 +831,11 @@ prompt_dir() {
     current_state="NOT_WRITABLE"
   elif [[ $(print -P "%~") == '~' ]]; then
     current_state="HOME"
+    "$1_prompt_segment" "$0_${current_state}" "$2" "045" "234" "" "${dir_states[$current_state]}"
   elif [[ $(print -P "%~") == '~'* ]]; then
     current_state="HOME_SUBFOLDER"
+    "$1_prompt_segment" "$0_${current_state}" "$2" "045" "234" "${current_path}" "${dir_states[$current_state]}"
   fi
-  "$1_prompt_segment" "$0_${current_state}" "$2" "blue" "$DEFAULT_COLOR" "${current_path}" "${dir_states[$current_state]}"
 }
 
 # Docker machine
