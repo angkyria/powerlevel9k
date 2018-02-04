@@ -287,7 +287,7 @@ prompt_anaconda() {
 
 # AWS Profile
 prompt_aws() {
-  local aws_profile="$AWS_DEFAULT_PROFILE"
+  local aws_profile="${AWS_PROFILE:-$AWS_DEFAULT_PROFILE}"
 
   if [[ -n "$aws_profile" ]]; then
     "$1_prompt_segment" "$0" "$2" red white "$aws_profile" 'AWS_ICON'
@@ -507,7 +507,11 @@ prompt_public_ip() {
   if [[ -f $POWERLEVEL9K_PUBLIC_IP_FILE ]]; then
     typeset -i timediff
     # if saved IP is more than
-    timediff=$(($(date +%s) - $(date -r $POWERLEVEL9K_PUBLIC_IP_FILE +%s)))
+    if [[ "$OS" == "OSX" ]]; then
+      timediff=$(($(date +%s) - $(stat -f "%m" $POWERLEVEL9K_PUBLIC_IP_FILE)))
+    else
+      timediff=$(($(date +%s) - $(date -r $POWERLEVEL9K_PUBLIC_IP_FILE +%s)))
+    fi
     [[ $timediff -gt $POWERLEVEL9K_PUBLIC_IP_TIMEOUT ]] && refresh_ip=true
     # If tmp file is empty get a fresh IP
     [[ -z $(cat $POWERLEVEL9K_PUBLIC_IP_FILE) ]] && refresh_ip=true
@@ -570,7 +574,7 @@ prompt_context() {
 
   local content=""
 
-  if [[ "$POWERLEVEL9K_ALWAYS_SHOW_CONTEXT" == true ]] || [[ "$USER" != "$DEFAULT_USER" ]] || [[ -n "$SSH_CLIENT" || -n "$SSH_TTY" ]]; then
+  if [[ "$POWERLEVEL9K_ALWAYS_SHOW_CONTEXT" == true ]] || [[ "$(whoami)" != "$DEFAULT_USER" ]] || [[ -n "$SSH_CLIENT" || -n "$SSH_TTY" ]]; then
 
       if [[ $(print -P "%#") == '#' ]]; then
         current_state="ROOT"
@@ -579,7 +583,7 @@ prompt_context() {
       content="${POWERLEVEL9K_CONTEXT_TEMPLATE}"
 
   elif [[ "$POWERLEVEL9K_ALWAYS_SHOW_USER" == true ]]; then
-      content="$USER"
+      content="$(whoami)"
   else
       return
   fi
@@ -594,7 +598,7 @@ set_default POWERLEVEL9K_USER_TEMPLATE "%n"
 prompt_user() {
   local current_state="DEFAULT"
   typeset -AH user_state
-  if [[ "$POWERLEVEL9K_ALWAYS_SHOW_USER" == true ]] || [[ "$USER" != "$DEFAULT_USER" ]]; then
+  if [[ "$POWERLEVEL9K_ALWAYS_SHOW_USER" == true ]] || [[ "$(whoami)" != "$DEFAULT_USER" ]]; then
     if [[ $(print -P "%#") == '#' ]]; then
       user_state=(
         "STATE"               "ROOT"
@@ -606,7 +610,7 @@ prompt_user() {
     else
       user_state=(
         "STATE"               "DEFAULT"
-        "CONTENT"             "$USER"
+        "CONTENT"             "$(whoami)"
         "BACKGROUND_COLOR"    "${DEFAULT_COLOR}"
         "FOREGROUND_COLOR"    "011"
         "VISUAL_IDENTIFIER"   "USER_ICON"
@@ -691,7 +695,10 @@ set_default POWERLEVEL9K_DIR_PATH_SEPARATOR "/"
 set_default POWERLEVEL9K_HOME_FOLDER_ABBREVIATION "~"
 set_default POWERLEVEL9K_DIR_SHOW_WRITABLE false
 prompt_dir() {
-  local current_path="$(print -P "%~")"
+  local tmp="$IFS"
+  local IFS=""
+  local current_path=$(pwd | sed -e "s,^$HOME,~,")
+  local IFS="$tmp"
   if [[ -n "$POWERLEVEL9K_SHORTEN_DIR_LENGTH" || "$POWERLEVEL9K_SHORTEN_STRATEGY" == "truncate_with_folder_marker" ]]; then
     set_default POWERLEVEL9K_SHORTEN_DELIMITER $'\U2026'
 
@@ -977,9 +984,9 @@ prompt_load() {
   # Replace comma
   load_avg=${load_avg//,/.}
 
-  if [[ "$load_avg" -gt $(bc -l <<< "${cores} * 0.7") ]]; then
+  if [[ "$load_avg" -gt $((${cores} * 0.7)) ]]; then
     current_state="critical"
-  elif [[ "$load_avg" -gt $(bc -l <<< "${cores} * 0.5") ]]; then
+  elif [[ "$load_avg" -gt $((${cores} * 0.5)) ]]; then
     current_state="warning"
   else
     current_state="normal"
@@ -1329,7 +1336,7 @@ powerlevel9k_vcs_init() {
 prompt_vcs() {
   VCS_WORKDIR_DIRTY=false
   VCS_WORKDIR_HALF_DIRTY=false
-  current_state=""
+  local current_state=""
 
   # Actually invoke vcs_info manually to gather all information.
   vcs_info
@@ -1376,18 +1383,10 @@ prompt_virtualenv() {
 }
 
 # pyenv: current active python version (with restrictions)
-# More information on pyenv (Python version manager like rbenv and rvm):
-# https://github.com/yyuu/pyenv
-# the prompt parses output of pyenv version and only displays the first word
+# https://github.com/pyenv/pyenv#choosing-the-python-version
 prompt_pyenv() {
-  local pyenv_version="$(pyenv version 2>/dev/null)"
-  pyenv_version="${pyenv_version%% *}"
-  # XXX: The following should return the same as above.
-  # This reads better for devs familiar with sed/awk/grep/cut utilities
-  # Using shell expansion/substitution may hamper future maintainability
-  #local pyenv_version="$(pyenv version 2>/dev/null | head -n1 | cut -d' ' -f1)"
-  if [[ -n "$pyenv_version" && "$pyenv_version" != "system" ]]; then
-    "$1_prompt_segment" "$0" "$2" "blue" "$DEFAULT_COLOR" "$pyenv_version" 'PYTHON_ICON'
+  if [[ -n "$PYENV_VERSION" ]]; then
+    "$1_prompt_segment" "$0" "$2" "blue" "$DEFAULT_COLOR" "$PYENV_VERSION" 'PYTHON_ICON'
   fi
 }
 
@@ -1409,7 +1408,7 @@ prompt_dir_writable() {
 
 # Kubernetes Current Context
 prompt_kubecontext() {
-  local kubectl_version=$(kubectl version --client 2>/dev/null)
+  local kubectl_version="$(kubectl version --client 2>/dev/null)"
 
   if [[ -n "$kubectl_version" ]]; then
     # Get the current Kubernetes config context's namespaece
@@ -1420,7 +1419,18 @@ prompt_kubecontext() {
     if [[ -z "$k8s_namespace" ]]; then
       k8s_namespace="default"
     fi
-    "$1_prompt_segment" "$0" "$2" "magenta" "white" "$k8s_context/$k8s_namespace" "KUBERNETES_ICON"
+  
+    local k8s_final_text=""
+
+    if [[ "$k8s_context" == "k8s_namespace" ]]; then
+      # No reason to print out the same identificator twice
+      k8s_final_text="$k8s_context"
+    else
+      k8s_final_text="$k8s_context/$k8s_namespace"
+    fi
+  
+    
+    "$1_prompt_segment" "$0" "$2" "magenta" "white" "$k8s_final_text" "KUBERNETES_ICON"
   fi
 }
 
@@ -1431,6 +1441,7 @@ prompt_kubecontext() {
 # Main prompt
 build_left_prompt() {
   local index=1
+  local element
   for element in "${POWERLEVEL9K_LEFT_PROMPT_ELEMENTS[@]}"; do
     # Remove joined information in direct calls
     element=${element%_joined}
@@ -1534,7 +1545,7 @@ prompt_powerlevel9k_setup() {
   local term_colors
   term_colors=$(echotc Co 2>/dev/null)
   if (( ! $? && ${term_colors:-0} < 256 )); then
-    print -P "%F{red}WARNING!%f Your terminal appears to support less than 256 colors!"
+    print -P "%F{red}WARNING!%f Your terminal appears to support fewer than 256 colors!"
     print -P "If your terminal supports 256 colors, please export the appropriate environment variable"
     print -P "_before_ loading this theme in your \~\/.zshrc. In most terminal emulators, putting"
     print -P "%F{blue}export TERM=\"xterm-256color\"%f at the top of your \~\/.zshrc is sufficient."

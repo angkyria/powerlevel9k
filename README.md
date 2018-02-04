@@ -1,6 +1,6 @@
 ![](https://raw.githubusercontent.com/bhilburn/powerlevel9k-logo/master/logo-banner.png)
 ---
-[![Build Status](https://travis-ci.org/bhilburn/powerlevel9k.svg?branch=next)](https://travis-ci.org/bhilburn/powerlevel9k)
+[![Build Status](https://travis-ci.org/bhilburn/powerlevel9k.svg?branch=master)](https://travis-ci.org/bhilburn/powerlevel9k)
 [![Join the chat at https://gitter.im/bhilburn/powerlevel9k](https://badges.gitter.im/bhilburn/powerlevel9k.svg)](https://gitter.im/bhilburn/powerlevel9k?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Powerlevel9k is a theme for ZSH which uses [Powerline
@@ -94,7 +94,7 @@ The segments that are currently available are:
 * `history` - The command number for the current line.
 * [`host`](#host) - Your current host name
 * [`ip`](#ip) - Shows the current IP address.
-* [`vpn`](#vpn) - Shows the current VPN IP address.
+* [`vpn_ip`](#vpn_ip) - Shows the current VPN IP address.
 * [`public_ip`](#public_ip) - Shows your public IP address.
 * [`load`](#load) - Your machine's load averages.
 * `os_icon` - Display a nice little icon, depending on your operating system.
@@ -436,8 +436,8 @@ POWERLEVEL9K_HOST_TEMPLATE="%2m"
 
 By default, LOCAL hosts will show the host icon and remote hosts will show the SSH icon. You can override them by setting
 ```
-POWERLEVEL9K_HOST_ICON="\uF109 "  # 
-POWERLEVEL9K_SSH_ICON="\uF489 "   # 
+POWERLEVEL9K_HOST_ICON="\uF109 "
+POWERLEVEL9K_SSH_ICON="\uF489 "
 ```
 
 
@@ -451,7 +451,7 @@ specify the correct network interface by setting:
 |----------|---------------|-------------|
 |`POWERLEVEL9K_IP_INTERFACE`|None|The NIC for which you wish to display the IP address. Example: `eth0`.|
 
-##### vpn
+##### vpn_ip
 
 This segment tries to extract the VPN related IP addresses from nmcli, based on the NIC type:
 
@@ -582,6 +582,10 @@ customization is provided via:
 |`POWERLEVEL9K_CHANGESET_HASH_LENGTH`|`12`|How many characters of the hash / changeset to display in the segment.|
 |`POWERLEVEL9K_VCS_SHOW_SUBMODULE_DIRTY`|`true`|Set to `false` to not reflect submodule status in the top-level repository prompt.|
 |`POWERLEVEL9K_VCS_HIDE_TAGS`|`false`|Set to `true` to stop tags being displayed in the segment.|
+|`POWERLEVEL9K_VCS_GIT_HOOKS`|`(vcs-detect-changes git-untracked git-aheadbehind git-stash git-remotebranch git-tagname)`|Layout of the segment for git repositories.|
+|`POWERLEVEL9K_VCS_HG_HOOKS`|`(vcs-detect-changes)`|Layout of the segment for Mercurial repositories.|
+|`POWERLEVEL9K_VCS_SVN_HOOKS`|`(vcs-detect-changes svn-detect-changes)`|Layout of the segment for SVN repositories.|
+|`POWERLEVEL9K_VCS_ACTIONFORMAT_FOREGROUND`|`red`|The color of the foreground font during actions (e.g., `REBASE`).|
 
 
 ##### vcs symbols
