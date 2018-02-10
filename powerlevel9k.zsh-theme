@@ -842,6 +842,9 @@ prompt_dir() {
   elif [[ $(print -P "%~") == '~'* ]]; then
     current_state="HOME_SUBFOLDER"
     "$1_prompt_segment" "$0_${current_state}" "$2" "045" "234" "${current_path}" "${dir_states[$current_state]}"
+  else
+    current_state="DEFAULT"
+    "$1_prompt_segment" "$0_${current_state}" "$2" "045" "234" "${current_path}" "${dir_states[$current_state]}"
   fi
 }
 
